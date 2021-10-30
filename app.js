@@ -1,7 +1,51 @@
+require("dotenv").config();
+
 const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
 const handlebars = require("handlebars");
+
+function sendMail(email, fileBase64) {
+  const mailjet = require("node-mailjet").connect(
+    process.env["MAILJET_KEY"],
+    process.env["MAILJET_KEY_SECRET"]
+  );
+
+  const request = mailjet.post("send", { version: "v3.1" }).request({
+    Messages: [
+      {
+        From: {
+          Email: process.env["MAILJET_FROM_EMAIL"],
+          Name: "Suivi-MX",
+        },
+        To: [
+          {
+            Email: email,
+            Name: "alexandre",
+          },
+        ],
+        Subject: "Test email.",
+        TextPart: "Un email avec un pdf",
+        Attachments: [
+          {
+            ContentType: "application/pdf",
+            Filename: "test.pdf",
+            Base64Content: fileBase64,
+          },
+        ],
+        HTMLPart: "Un message  de test",
+        CustomID: "AppGettingStartedTest",
+      },
+    ],
+  });
+  request
+    .then((result) => {
+      console.log(result.body);
+    })
+    .catch((err) => {
+      console.log(err.statusCode);
+    });
+}
 
 const TEMPLATES = {
   ENTRETIENS: "entretiens.html",
@@ -60,5 +104,7 @@ createPDF(TEMPLATES.ENTRETIENS, {
     { date: "16/04/2021", nom: "Changement roulements roue AR", heure: 20 },
   ],
 }).then((bufferFile) => {
-  console.log("bufferFile pdf", bufferFile);
+  const base64File = bufferFile.toString("base64");
+
+  sendMail(process.env["EMAIL_DIST"], base64File);
 });

@@ -4,7 +4,9 @@
   "main": "app.js",
   "license": "MIT",
   "dependencies": {
+    "dotenv": "^10.0.0",
     "handlebars": "^4.7.7",
+    "node-mailjet": "^3.3.4",
     "puppeteer": "^10.4.0"
   }
 }
